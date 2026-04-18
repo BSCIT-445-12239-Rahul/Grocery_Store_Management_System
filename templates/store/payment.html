@@ -1,0 +1,456 @@
+{% extends 'store/base.html' %}
+{% block title %}Payment — FreshMart{% endblock %}
+
+{% block content %}
+<div class="page-header py-4 mb-2">
+    <div class="container">
+        <h2 class="page-title"><i class="bi bi-credit-card me-2 text-success"></i>Secure Payment</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'cart' %}">Cart</a></li>
+                <li class="breadcrumb-item active">Payment</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Progress Steps -->
+<div class="container mb-4">
+    <div class="checkout-steps d-flex align-items-center justify-content-center">
+        <div class="step done">
+            <div class="step-circle"><i class="bi bi-check-lg"></i></div>
+            <span>Cart</span>
+        </div>
+        <div class="step-line done"></div>
+        <div class="step active">
+            <div class="step-circle">2</div>
+            <span>Payment</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-circle">3</div>
+            <span>Confirm</span>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <form method="POST" action="{% url 'place_order' %}" id="checkoutForm" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+
+            <!-- Payment Methods -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-600"><i class="bi bi-wallet2 me-2 text-success"></i>Choose Payment Method</h5>
+                    </div>
+                    <div class="card-body p-4">
+
+                        {% if form.payment_method.errors %}
+                        <div class="alert alert-danger py-2 small">
+                            <i class="bi bi-exclamation-circle me-1"></i>{{ form.payment_method.errors|join:", " }}
+                        </div>
+                        {% endif %}
+
+                        <!-- UPI -->
+                        <div class="payment-option">
+                            <input class="payment-radio" type="radio" name="payment_method" id="upi" value="upi"
+                                   {% if form.payment_method.value == 'upi' %}checked{% endif %}>
+                            <label class="payment-label" for="upi">
+                                <div class="payment-icon upi-icon"><i class="bi bi-phone-fill"></i></div>
+                                <div class="payment-info">
+                                    <div class="fw-600">UPI Payment</div>
+                                    <small class="text-muted">Google Pay, PhonePe, Paytm, BHIM</small>
+                                </div>
+                                <div class="ms-auto d-flex gap-1">
+                                    <span class="upi-badge">GPay</span>
+                                    <span class="upi-badge">PhonePe</span>
+                                    <span class="upi-badge">Paytm</span>
+                                </div>
+                            </label>
+                            <div class="payment-detail" id="upi-detail">
+                                <div class="mt-3 p-3 bg-light rounded">
+                                    <label class="form-label small fw-500">Enter UPI ID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" placeholder="yourname@upi"
+                                           id="upi_id_input" name="upi_id_display"
+                                           pattern="^[a-zA-Z0-9.\-_]{3,}@[a-zA-Z]{3,}$"
+                                           maxlength="50">
+                                    <div class="invalid-feedback">Enter a valid UPI ID (e.g. name@okaxis)</div>
+                                    <small class="text-muted">e.g. mobile@okaxis, name@ybl</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card -->
+                        <div class="payment-option">
+                            <input class="payment-radio" type="radio" name="payment_method" id="card" value="card"
+                                   {% if form.payment_method.value == 'card' or not form.payment_method.value %}checked{% endif %}>
+                            <label class="payment-label" for="card">
+                                <div class="payment-icon card-icon"><i class="bi bi-credit-card-fill"></i></div>
+                                <div class="payment-info">
+                                    <div class="fw-600">Credit / Debit Card</div>
+                                    <small class="text-muted">Visa, Mastercard, RuPay</small>
+                                </div>
+                                <div class="ms-auto d-flex gap-1">
+                                    <span class="card-badge visa">VISA</span>
+                                    <span class="card-badge mc">MC</span>
+                                    <span class="card-badge rupay">RuPay</span>
+                                </div>
+                            </label>
+                            <div class="payment-detail" id="card-detail">
+                                <div class="mt-3 p-3 bg-light rounded">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-500">Card Number <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="1234 5678 9012 3456"
+                                               maxlength="19" id="card_num" name="card_num_display"
+                                               inputmode="numeric">
+                                        <div class="invalid-feedback">Enter a valid 16-digit card number.</div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-500">Expiry <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" placeholder="MM / YY"
+                                                   maxlength="7" id="card_expiry" name="card_expiry_display"
+                                                   inputmode="numeric">
+                                            <div class="invalid-feedback">Use MM/YY format.</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-500">CVV <span class="text-danger">*</span></label>
+                                            <input type="password" class="form-control" placeholder="•••"
+                                                   maxlength="4" id="card_cvv" name="card_cvv_display"
+                                                   inputmode="numeric">
+                                            <div class="invalid-feedback">CVV must be 3–4 digits.</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <label class="form-label small fw-500">Cardholder Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="Name on card"
+                                               id="card_name" name="card_name_display" maxlength="100">
+                                        <div class="invalid-feedback">Cardholder name is required.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div class="payment-option">
+                            <input class="payment-radio" type="radio" name="payment_method" id="qr" value="qr"
+                                   {% if form.payment_method.value == 'qr' %}checked{% endif %}>
+                            <label class="payment-label" for="qr">
+                                <div class="payment-icon upi-icon"><i class="bi bi-qr-code-scan"></i></div>
+                                <div class="payment-info">
+                                    <div class="fw-600">QR Code Payment</div>
+                                    <small class="text-muted">Scan &amp; pay instantly with any UPI app</small>
+                                </div>
+                            </label>
+                            <div class="payment-detail" id="qr-detail">
+                                <div class="text-center mt-3 p-3 bg-light rounded">
+                                    <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code"
+                                         style="width:180px;height:180px;border-radius:8px;border:1px solid #dee2e6;">
+                                    <p class="small text-muted mt-2 mb-0">
+                                        UPI ID: <strong>{{ upi_id }}</strong><br>
+                                        Scan with GPay, PhonePe, Paytm, or any UPI app.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COD -->
+                        <div class="payment-option last">
+                            <input class="payment-radio" type="radio" name="payment_method" id="cod" value="cod"
+                                   {% if form.payment_method.value == 'cod' %}checked{% endif %}>
+                            <label class="payment-label" for="cod">
+                                <div class="payment-icon cod-icon"><i class="bi bi-cash-stack"></i></div>
+                                <div class="payment-info">
+                                    <div class="fw-600">Cash on Delivery</div>
+                                    <small class="text-muted">Pay when your order arrives</small>
+                                </div>
+                                <span class="ms-auto badge bg-success-subtle text-success">Popular</span>
+                            </label>
+                            <div class="payment-detail" id="cod-detail">
+                                <div class="alert alert-success mt-3 mb-0 py-2">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Pay in cash when our delivery partner arrives.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Delivery Address -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-600"><i class="bi bi-geo-alt me-2 text-success"></i>Delivery Address</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-500">Full Name <span class="text-danger">*</span></label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.full_name.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-500">Street Address <span class="text-danger">*</span></label>
+                                {{ form.street_address }}
+                                {% if form.street_address.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.street_address.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-500">Flat / House No.</label>
+                                {{ form.flat_no }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-500">City <span class="text-danger">*</span></label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.city.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-500">State <span class="text-danger">*</span></label>
+                                {{ form.state }}
+                                {% if form.state.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.state.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-500">PIN Code <span class="text-danger">*</span></label>
+                                {{ form.pin_code }}
+                                {% if form.pin_code.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.pin_code.errors|join:", " }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-500">Phone Number <span class="text-danger">*</span></label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ form.phone.errors|join:", " }}</div>
+                                {% endif %}
+                                <small class="text-muted">10-digit Indian mobile number</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm sticky-top" style="top:90px;">
+                    <div class="card-header bg-success text-white py-3">
+                        <h6 class="mb-0 fw-600"><i class="bi bi-bag-check me-2"></i>Order Summary</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="order-items-list p-3 border-bottom">
+                            {% for item in cart_items %}
+                            <div class="d-flex justify-content-between align-items-center py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="item-qty-badge">{{ item.quantity }}×</span>
+                                    <span class="small fw-500">{{ item.product.name }}</span>
+                                </div>
+                                <span class="small fw-600">₹{{ item.get_total_price }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="p-3">
+                            <div class="summary-row">
+                                <span>Subtotal</span><span>₹{{ total }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Delivery</span>
+                                <span class="{% if delivery_charge == 0 %}text-success fw-600{% endif %}">
+                                    {% if delivery_charge == 0 %}FREE{% else %}₹{{ delivery_charge }}{% endif %}
+                                </span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="summary-row total-row mb-3">
+                                <span class="fw-700">Grand Total</span>
+                                <span class="fw-700 fs-5 text-success">₹{{ grand_total }}</span>
+                            </div>
+                            <button type="submit" class="btn btn-pay w-100" id="payBtn">
+                                <i class="bi bi-lock-fill me-2"></i>Pay Now — ₹{{ grand_total }}
+                            </button>
+                            <a href="{% url 'cart' %}" class="btn btn-outline-secondary w-100 mt-2 btn-sm">
+                                <i class="bi bi-arrow-left me-1"></i>Back to Cart
+                            </a>
+                            <div class="text-center mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-shield-lock text-success me-1"></i>
+                                    100% secure &amp; encrypted payment
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Payment panel toggle ──────────────────────────────────────────────────────
+document.querySelectorAll('.payment-radio').forEach(radio => {
+    radio.addEventListener('change', function () {
+        document.querySelectorAll('.payment-detail').forEach(d => d.style.display = 'none');
+        document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+        const detail = document.getElementById(this.id + '-detail');
+        if (detail) detail.style.display = 'block';
+        this.closest('.payment-option').classList.add('selected');
+    });
+});
+const checked = document.querySelector('.payment-radio:checked');
+if (checked) checked.dispatchEvent(new Event('change'));
+
+// ── Card number auto-format ───────────────────────────────────────────────────
+const cardNum = document.getElementById('card_num');
+if (cardNum) {
+    cardNum.addEventListener('input', function () {
+        let v = this.value.replace(/\D/g, '').substring(0, 16);
+        this.value = v.replace(/(.{4})/g, '$1 ').trim();
+    });
+}
+
+// ── Expiry auto-format ────────────────────────────────────────────────────────
+const cardExpiry = document.getElementById('card_expiry');
+if (cardExpiry) {
+    cardExpiry.addEventListener('input', function () {
+        let v = this.value.replace(/\D/g, '').substring(0, 4);
+        if (v.length >= 2) v = v.slice(0, 2) + ' / ' + v.slice(2);
+        this.value = v;
+    });
+}
+
+// ── PIN code: digits only ─────────────────────────────────────────────────────
+const pinInput = document.getElementById('id_pin_code');
+if (pinInput) {
+    pinInput.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').substring(0, 6);
+    });
+}
+
+// ── Phone: digits only ───────────────────────────────────────────────────────
+const phoneInput = document.getElementById('id_phone');
+if (phoneInput) {
+    phoneInput.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').substring(0, 10);
+    });
+}
+
+// ── Client-side form validation on submit ────────────────────────────────────
+document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+    let valid = true;
+
+    function setError(el, msg) {
+        if (!el) return;
+        el.classList.add('is-invalid');
+        let fb = el.nextElementSibling;
+        if (!fb || !fb.classList.contains('invalid-feedback')) {
+            fb = document.createElement('div');
+            fb.className = 'invalid-feedback';
+            el.parentNode.insertBefore(fb, el.nextSibling);
+        }
+        fb.textContent = msg;
+        valid = false;
+    }
+    function clearError(el) {
+        if (!el) return;
+        el.classList.remove('is-invalid');
+        el.classList.add('is-valid');
+    }
+
+    // Payment method must be selected
+    const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+    if (!selectedPayment) {
+        alert('Please select a payment method.');
+        valid = false;
+    } else {
+        const method = selectedPayment.value;
+
+        // Card validation
+        if (method === 'card') {
+            const num  = (cardNum ? cardNum.value.replace(/\s/g, '') : '');
+            const exp  = document.getElementById('card_expiry');
+            const cvv  = document.getElementById('card_cvv');
+            const name = document.getElementById('card_name');
+
+            if (num.length !== 16 || !/^\d+$/.test(num)) setError(cardNum, 'Enter a valid 16-digit card number.'); else clearError(cardNum);
+            if (exp && !/^\d{2}\s*\/\s*\d{2}$/.test(exp.value.trim())) setError(exp, 'Use MM / YY format.'); else clearError(exp);
+            if (cvv && (cvv.value.length < 3 || cvv.value.length > 4 || !/^\d+$/.test(cvv.value))) setError(cvv, 'CVV must be 3–4 digits.'); else clearError(cvv);
+            if (name && name.value.trim().length < 2) setError(name, 'Cardholder name is required.'); else clearError(name);
+        }
+
+        // UPI validation
+        if (method === 'upi') {
+            const upi = document.getElementById('upi_id_input');
+            if (upi && !/^[a-zA-Z0-9.\-_]{3,}@[a-zA-Z]{3,}$/.test(upi.value.trim())) {
+                setError(upi, 'Enter a valid UPI ID (e.g. name@okaxis).');
+            } else if (upi) { clearError(upi); }
+        }
+    }
+
+    // Address fields
+    const fullName     = document.getElementById('id_full_name');
+    const streetAddr   = document.getElementById('id_street_address');
+    const cityEl       = document.getElementById('id_city');
+    const stateEl      = document.getElementById('id_state');
+    const pinEl        = document.getElementById('id_pin_code');
+    const phoneEl      = document.getElementById('id_phone');
+
+    if (fullName && fullName.value.trim().length < 2) setError(fullName, 'Full name is required (min 2 chars).'); else clearError(fullName);
+    if (streetAddr && streetAddr.value.trim().length < 5) setError(streetAddr, 'Please enter a valid street address.'); else clearError(streetAddr);
+    if (cityEl && cityEl.value.trim().length < 2) setError(cityEl, 'City is required.'); else clearError(cityEl);
+    if (stateEl && stateEl.value.trim().length < 2) setError(stateEl, 'State is required.'); else clearError(stateEl);
+    if (pinEl && !/^\d{6}$/.test(pinEl.value.trim())) setError(pinEl, 'PIN code must be exactly 6 digits.'); else clearError(pinEl);
+    if (phoneEl && !/^[6-9]\d{9}$/.test(phoneEl.value.trim())) setError(phoneEl, 'Enter a valid 10-digit mobile number starting with 6–9.'); else clearError(phoneEl);
+
+    if (!valid) {
+        e.preventDefault();
+        const firstErr = document.querySelector('.is-invalid');
+        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // Loading state
+    const btn = document.getElementById('payBtn');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    btn.disabled = true;
+});
+
+// ── Live field validation ─────────────────────────────────────────────────────
+function liveValidate(id, testFn, errMsg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('blur', function () {
+        if (!testFn(this.value)) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+    });
+}
+
+liveValidate('id_full_name',      v => v.trim().length >= 2,             '');
+liveValidate('id_street_address', v => v.trim().length >= 5,             '');
+liveValidate('id_city',           v => /^[a-zA-Z\s\-']+$/.test(v.trim()) && v.trim().length >= 2, '');
+liveValidate('id_state',          v => /^[a-zA-Z\s\-']+$/.test(v.trim()) && v.trim().length >= 2, '');
+liveValidate('id_pin_code',       v => /^\d{6}$/.test(v.trim()),         '');
+liveValidate('id_phone',          v => /^[6-9]\d{9}$/.test(v.trim()),    '');
+liveValidate('upi_id_input',      v => /^[a-zA-Z0-9.\-_]{3,}@[a-zA-Z]{3,}$/.test(v.trim()), '');
+</script>
+{% endblock %}

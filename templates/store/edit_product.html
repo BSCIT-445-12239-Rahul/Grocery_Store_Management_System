@@ -1,0 +1,188 @@
+{% extends 'store/base.html' %}
+{% block title %}Edit — {{ product.name }} | FreshMart{% endblock %}
+
+{% block content %}
+<div class="page-header py-4 mb-2">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h2 class="page-title mb-0">
+                    <i class="bi bi-pencil-square me-2 text-warning"></i>Edit Product
+                </h2>
+                <nav aria-label="breadcrumb" class="mt-1">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">Edit: {{ product.name }}</li>
+                    </ol>
+                </nav>
+            </div>
+            <span class="badge bg-danger fs-6 px-3 py-2">
+                <i class="bi bi-shield-lock me-1"></i>Admin Only
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                        {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #dee2e6;">
+                        {% else %}
+                        <div style="width:48px;height:48px;border-radius:8px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🛒</div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-0 fw-bold">{{ product.name }}</h5>
+                            <small class="text-muted">Product ID: #{{ product.id }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- enctype="multipart/form-data" is required for image uploads -->
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold"><i class="bi bi-tag me-1 text-success"></i>Product Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold"><i class="bi bi-card-text me-1 text-success"></i>Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-semibold"><i class="bi bi-currency-rupee me-1 text-success"></i>Price (₹)</label>
+                                {{ form.price }}
+                                {% if form.price.errors %}<div class="text-danger small mt-1">{{ form.price.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold"><i class="bi bi-box-seam me-1 text-success"></i>Stock Quantity</label>
+                                {{ form.stock }}
+                                {% if form.stock.errors %}<div class="text-danger small mt-1">{{ form.stock.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold"><i class="bi bi-grid me-1 text-success"></i>Category</label>
+                            {{ form.category }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold"><i class="bi bi-image me-1 text-success"></i>Product Image</label>
+                            {% if product.image %}
+                            <div class="mb-2">
+                                <small class="text-muted">Current image:</small><br>
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                     style="max-height:120px;border-radius:8px;border:1px solid #dee2e6;margin-top:4px;">
+                            </div>
+                            <small class="text-muted d-block mb-1">Upload a new image to replace (leave blank to keep current).</small>
+                            {% else %}
+                            <small class="text-muted d-block mb-1">No image uploaded yet.</small>
+                            {% endif %}
+                            {{ form.image }}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_available }}
+                                <label class="form-check-label fw-semibold ms-2">Product is available for purchase</label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 flex-wrap">
+                            <button type="submit" class="btn btn-warning fw-semibold px-4" id="saveBtn">
+                                <i class="bi bi-check-circle me-2"></i>Save Changes
+                            </button>
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelector('form').addEventListener('submit', function (e) {
+    let valid = true;
+    function err(el, msg) {
+        el.classList.add('is-invalid');
+        let fb = el.parentNode.querySelector('.invalid-feedback');
+        if (!fb) { fb = document.createElement('div'); fb.className = 'invalid-feedback'; el.parentNode.appendChild(fb); }
+        fb.textContent = msg;
+        valid = false;
+    }
+    function ok(el) { el.classList.remove('is-invalid'); el.classList.add('is-valid'); }
+
+    const name  = document.getElementById('id_name');
+    const price = document.getElementById('id_price');
+    const stock = document.getElementById('id_stock');
+
+    if (!name || name.value.trim().length < 2) err(name, 'Product name must be at least 2 characters.'); else ok(name);
+
+    const priceVal = parseFloat(price ? price.value : '');
+    if (!price || isNaN(priceVal) || priceVal <= 0) err(price, 'Price must be a positive number greater than zero.');
+    else if (priceVal > 99999.99) err(price, 'Price cannot exceed Rs.99,999.99.');
+    else ok(price);
+
+    const stockVal = parseInt(stock ? stock.value : '');
+    if (!stock || isNaN(stockVal) || stockVal < 0) err(stock, 'Stock cannot be negative.');
+    else if (stockVal > 99999) err(stock, 'Stock cannot exceed 99,999 units.');
+    else ok(stock);
+
+    // Image size check (if a new file was selected)
+    const imgInput = document.querySelector('input[type="file"]');
+    if (imgInput && imgInput.files.length > 0) {
+        const file = imgInput.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image file is too large. Maximum allowed size is 5 MB.');
+            valid = false;
+        }
+        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowed.includes(file.type)) {
+            alert('Only JPEG, PNG, WEBP, or GIF images are allowed.');
+            valid = false;
+        }
+    }
+
+    if (!valid) {
+        e.preventDefault();
+        const firstErr = document.querySelector('.is-invalid');
+        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+    const btn = document.getElementById('saveBtn');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+    btn.disabled = true;
+});
+
+// Live validation
+['id_name', 'id_price', 'id_stock'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('blur', function () {
+        if (!this.value.trim()) {
+            this.classList.add('is-invalid');
+            this.classList.remove('is-valid');
+        } else {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        }
+    });
+});
+</script>
+{% endblock %}

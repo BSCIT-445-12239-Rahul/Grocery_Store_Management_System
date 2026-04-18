@@ -1,0 +1,253 @@
+{% extends 'store/base.html' %}
+{% block title %}Create Account — FreshMart{% endblock %}
+
+{% block content %}
+<div class="auth-page py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+                <div class="auth-card card border-0 shadow-lg">
+
+                    <div class="auth-card-header text-center py-4">
+                        <div class="auth-icon mb-3"><i class="bi bi-person-plus-fill"></i></div>
+                        <h3 class="mb-1">Create Your Account</h3>
+                        <p class="text-muted mb-0">Join FreshMart and start shopping fresh!</p>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <form method="POST" novalidate id="registerForm">
+                            {% csrf_token %}
+
+                            <!-- Name Row -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label fw-500">
+                                        <i class="bi bi-person me-1 text-success"></i>First Name
+                                    </label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.first_name.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-500">Last Name</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.last_name.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Username -->
+                            <div class="mb-3">
+                                <label class="form-label fw-500">
+                                    <i class="bi bi-at me-1 text-success"></i>Username
+                                </label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form.username.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                                <!-- Live validation hint -->
+                                <div class="mt-2" id="username-hints">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge rounded-pill bg-light text-muted border" id="hint-len">
+                                            <i class="bi bi-circle me-1"></i>Min 4 chars
+                                        </span>
+                                        <span class="badge rounded-pill bg-light text-muted border" id="hint-letter">
+                                            <i class="bi bi-circle me-1"></i>Has a letter
+                                        </span>
+                                        <span class="badge rounded-pill bg-light text-muted border" id="hint-number">
+                                            <i class="bi bi-circle me-1"></i>Has a number
+                                        </span>
+                                        <span class="badge rounded-pill bg-light text-muted border" id="hint-alnum">
+                                            <i class="bi bi-circle me-1"></i>Letters & numbers only
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label class="form-label fw-500">
+                                    <i class="bi bi-envelope me-1 text-success"></i>Email Address
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form.email.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Password -->
+                            <div class="mb-3">
+                                <label class="form-label fw-500">
+                                    <i class="bi bi-lock me-1 text-success"></i>Password
+                                </label>
+                                <div class="input-group">
+                                    {{ form.password1 }}
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="togglePwd('id_password1', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                {% if form.password1.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form.password1.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                                <!-- Password strength bar -->
+                                <div class="mt-2">
+                                    <div class="progress" style="height:5px;">
+                                        <div id="pwdBar" class="progress-bar" style="width:0%;transition:all .3s;"></div>
+                                    </div>
+                                    <small id="pwdLabel" class="text-muted"></small>
+                                </div>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="mb-4">
+                                <label class="form-label fw-500">
+                                    <i class="bi bi-lock-fill me-1 text-success"></i>Confirm Password
+                                </label>
+                                <div class="input-group">
+                                    {{ form.password2 }}
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="togglePwd('id_password2', this)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                {% if form.password2.errors %}
+                                <div class="text-danger small mt-1">
+                                    <i class="bi bi-exclamation-circle me-1"></i>
+                                    {{ form.password2.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                                <div id="pwdMatchMsg" class="small mt-1"></div>
+                            </div>
+
+                            <button type="submit" class="btn btn-auth w-100" id="regBtn">
+                                <i class="bi bi-person-check me-2"></i>Create Account
+                            </button>
+                        </form>
+
+                        <hr class="my-4">
+                        <p class="text-center mb-0">
+                            Already have an account?
+                            <a href="{% url 'login' %}" class="auth-link fw-600">Sign In</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Show/hide password ────────────────────────────────────────────────────────
+function togglePwd(id, btn) {
+    const el   = document.getElementById(id);
+    const icon = btn.querySelector('i');
+    if (el.type === 'password') { el.type = 'text';     icon.className = 'bi bi-eye-slash'; }
+    else                        { el.type = 'password'; icon.className = 'bi bi-eye'; }
+}
+
+// ── Username live hints ───────────────────────────────────────────────────────
+const usernameInput = document.getElementById('id_username');
+const hints = {
+    len:    document.getElementById('hint-len'),
+    letter: document.getElementById('hint-letter'),
+    number: document.getElementById('hint-number'),
+    alnum:  document.getElementById('hint-alnum'),
+};
+
+function setHint(el, ok) {
+    if (!el) return;
+    const icon = el.querySelector('i');
+    if (ok) {
+        el.classList.remove('bg-light', 'text-muted', 'border');
+        el.classList.add('bg-success', 'text-white');
+        icon.className = 'bi bi-check-circle-fill me-1';
+    } else {
+        el.classList.remove('bg-success', 'text-white');
+        el.classList.add('bg-light', 'text-muted', 'border');
+        icon.className = 'bi bi-circle me-1';
+    }
+}
+
+if (usernameInput) {
+    usernameInput.addEventListener('input', function () {
+        const v = this.value;
+        setHint(hints.len,    v.length >= 4);
+        setHint(hints.letter, /[a-zA-Z]/.test(v));
+        setHint(hints.number, /[0-9]/.test(v));
+        setHint(hints.alnum,  v.length > 0 && /^[a-zA-Z0-9]+$/.test(v));
+    });
+}
+
+// ── Password strength ─────────────────────────────────────────────────────────
+const pwd1   = document.getElementById('id_password1');
+const bar    = document.getElementById('pwdBar');
+const label  = document.getElementById('pwdLabel');
+
+if (pwd1) {
+    pwd1.addEventListener('input', function () {
+        const v = this.value;
+        let score = 0;
+        if (v.length >= 8)           score++;
+        if (/[A-Z]/.test(v))         score++;
+        if (/[0-9]/.test(v))         score++;
+        if (/[^a-zA-Z0-9]/.test(v)) score++;
+        if (v.length >= 12)          score++;
+
+        const levels = [
+            {pct:0,  cls:'',           txt:''},
+            {pct:20, cls:'bg-danger',  txt:'Very weak'},
+            {pct:40, cls:'bg-warning', txt:'Weak'},
+            {pct:60, cls:'bg-info',    txt:'Fair'},
+            {pct:80, cls:'bg-primary', txt:'Strong'},
+            {pct:100,cls:'bg-success', txt:'Very strong ✓'},
+        ];
+        const lv = levels[Math.min(score, 5)];
+        bar.style.width = lv.pct + '%';
+        bar.className   = 'progress-bar ' + lv.cls;
+        label.textContent = lv.txt;
+    });
+}
+
+// ── Confirm password match ────────────────────────────────────────────────────
+const pwd2     = document.getElementById('id_password2');
+const matchMsg = document.getElementById('pwdMatchMsg');
+
+if (pwd2) {
+    pwd2.addEventListener('input', function () {
+        if (!this.value) { matchMsg.textContent = ''; return; }
+        if (this.value === pwd1.value) {
+            matchMsg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Passwords match</span>';
+        } else {
+            matchMsg.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Passwords do not match</span>';
+        }
+    });
+}
+
+// ── Submit loading state ──────────────────────────────────────────────────────
+document.getElementById('registerForm').addEventListener('submit', function () {
+    const btn = document.getElementById('regBtn');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+    btn.disabled  = true;
+});
+</script>
+{% endblock %}
